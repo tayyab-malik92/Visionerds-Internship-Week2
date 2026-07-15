@@ -13,9 +13,9 @@ print(Fore.CYAN + "=" * 60)
 print(Fore.CYAN + " Visionerds Internship - Week 2 Day 8")
 print(Fore.CYAN + "=" * 60)
 
-# --------------------------------------------------
+# -----------------------------
 # Load PDF
-# --------------------------------------------------
+# -----------------------------
 
 print(Fore.YELLOW + "\nLoading PDF...")
 
@@ -26,7 +26,6 @@ print(Fore.GREEN + "PDF Loaded Successfully!")
 text = ""
 
 for page in reader.pages:
-
     extracted = page.extract_text()
 
     if extracted:
@@ -34,9 +33,9 @@ for page in reader.pages:
 
 print(Fore.GREEN + "Text Extracted Successfully!")
 
-# --------------------------------------------------
+# -----------------------------
 # Chunking
-# --------------------------------------------------
+# -----------------------------
 
 print(Fore.YELLOW + "\nCreating Chunks...")
 
@@ -48,9 +47,9 @@ chunks = create_chunks(
 
 print(Fore.GREEN + f"{len(chunks)} chunks created.")
 
-# --------------------------------------------------
+# -----------------------------
 # Vector Store
-# --------------------------------------------------
+# -----------------------------
 
 print(Fore.YELLOW + "\nInitializing Vector Store...")
 
@@ -58,21 +57,25 @@ store = VectorStore()
 
 store.add_chunks(chunks)
 
-print(Fore.YELLOW + "\nDatabase Statistics")
-print("-" * 30)
-print(Fore.WHITE + f"Stored Documents : {store.collection.count()}")
+print(Fore.CYAN + "\nDatabase Statistics")
+print(Fore.CYAN + "-" * 30)
+print(Fore.GREEN + f"Stored Documents : {store.collection.count()}")
 
 print(Fore.GREEN + "\nVector Database Ready!")
 
-# --------------------------------------------------
+# -----------------------------
 # Semantic Search
-# --------------------------------------------------
+# -----------------------------
 
 print(Fore.CYAN + "\n" + "=" * 60)
-print(" Semantic Search")
-print("=" * 60)
+print(Fore.CYAN + " Semantic Search")
+print(Fore.CYAN + "=" * 60)
 
-query = input(Fore.MAGENTA + "\nEnter your question: ")
+query = input(Fore.MAGENTA + "\nEnter your question: ").strip()
+
+if not query:
+    print(Fore.RED + "\nPlease enter a valid question.")
+    exit()
 
 search_start = time.time()
 
@@ -84,32 +87,48 @@ documents = results["documents"][0]
 distances = results["distances"][0]
 ids = results["ids"][0]
 
+# Reject unrelated questions
+if distances[0] > 0.65:
+    print(Fore.RED + "\nNo relevant information found in the document.")
+    print(Fore.YELLOW + "Try asking a question related to the uploaded PDF.")
+
+    end = time.time()
+
+    print(Fore.CYAN + "\n" + "=" * 60)
+    print(Fore.GREEN + f"Retrieval Time : {search_end-search_start:.3f} sec")
+    print(Fore.GREEN + f"Execution Time : {end-start:.2f} sec")
+    print(Fore.CYAN + "=" * 60)
+
+    exit()
+
 print(Fore.CYAN + "\nTop Matching Chunks")
 
 for i, (doc, distance, chunk_id) in enumerate(
-    zip(documents, distances, ids),
-    start=1
-):
+        zip(documents, distances, ids), start=1):
 
-    print("\n" + Fore.YELLOW + "=" * 60)
+    relevance = (1 - distance) * 100
+
+    print(Fore.CYAN + "\n" + "=" * 60)
     print(Fore.GREEN + f"Top Match #{i}")
-    print(Fore.YELLOW + "=" * 60)
+    print(Fore.CYAN + "=" * 60)
 
-    print(Fore.LIGHTBLUE_EX + f"Chunk ID : {chunk_id}")
-    print(Fore.CYAN + f"Cosine Distance : {distance:.4f}\n")
+    print(Fore.YELLOW + f"Chunk ID : {chunk_id}")
+    print(Fore.YELLOW + f"Relevance : {relevance:.1f}%")
+    print(Fore.YELLOW + f"Cosine Distance : {distance:.4f}\n")
 
-    preview = doc.replace("\n", " ")
+    preview = doc[:400]
 
-    if len(preview) > 350:
-        preview = preview[:350] + "..."
+    if len(doc) > 400:
+        preview += "..."
 
-    print(Fore.WHITE + preview)
+    print(preview)
 
 end = time.time()
 
 print(Fore.CYAN + "\n" + "=" * 60)
-print(Fore.GREEN + f"Retrieval Time : {search_end - search_start:.3f} sec")
-print(Fore.GREEN + f"Execution Time : {end - start:.2f} sec")
+print(Fore.GREEN + f"Retrieval Time : {search_end-search_start:.3f} sec")
+print(Fore.GREEN + f"Execution Time : {end-start:.2f} sec")
 print(Fore.CYAN + "=" * 60)
-print(Fore.YELLOW + "\nSearch completed successfully!")
-print(Fore.YELLOW + f"Retrieved Top {len(documents)} most relevant chunks.")
+
+print(Fore.GREEN + "\nSearch completed successfully!")
+print(Fore.GREEN + f"Retrieved Top {len(documents)} most relevant chunks.")

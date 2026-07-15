@@ -8,7 +8,9 @@ class VectorStore:
 
         print("Loading Embedding Model...")
 
-        self.model = SentenceTransformer("all-MiniLM-L6-v2")
+        self.model = SentenceTransformer(
+            "all-MiniLM-L6-v2"
+        )
 
         print("Embedding Model Loaded!")
 
@@ -28,13 +30,20 @@ class VectorStore:
         existing = self.collection.count()
 
         if existing > 0:
+
             print("Database already contains embeddings.")
             print("Skipping embedding generation.\n")
             return
 
-        embeddings = self.model.encode(chunks).tolist()
+        embeddings = self.model.encode(
+            chunks,
+            normalize_embeddings=True
+        ).tolist()
 
-        ids = [f"chunk_{i}" for i in range(len(chunks))]
+        ids = [
+            f"chunk_{i}"
+            for i in range(len(chunks))
+        ]
 
         self.collection.add(
             ids=ids,
@@ -46,7 +55,10 @@ class VectorStore:
 
     def search(self, query, top_k=3):
 
-        query_embedding = self.model.encode([query]).tolist()
+        query_embedding = self.model.encode(
+            [query],
+            normalize_embeddings=True
+        ).tolist()
 
         results = self.collection.query(
             query_embeddings=query_embedding,
